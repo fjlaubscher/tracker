@@ -57,3 +57,10 @@ declare module '*.png' {
 }
 
 /* CUSTOM: ADD YOUR OWN HERE */
+interface IdParams {
+  id: string;
+}
+
+interface GameFormFields {
+  name: string;
+}
