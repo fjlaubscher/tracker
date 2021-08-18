@@ -14,6 +14,9 @@ import {
   AccordionIcon
 } from '@chakra-ui/react';
 
+// components
+import Layout from './components/layout';
+
 interface Props {
   children: React.ReactNode;
 }
@@ -35,7 +38,7 @@ class ErrorBoundary extends React.Component<Props, State> {
   render() {
     if (this.state.error) {
       return (
-        <Container maxW="container.xl">
+        <Layout title="Error!">
           <Alert status="error" mb="4">
             <AlertIcon />
             <Box flex="1">
@@ -43,8 +46,8 @@ class ErrorBoundary extends React.Component<Props, State> {
               <AlertDescription display="block">Please refresh the page.</AlertDescription>
             </Box>
           </Alert>
-          <Accordion allowToggle>
-            <AccordionItem>
+          <Accordion width="100%" allowToggle>
+            <AccordionItem width="100%">
               <h2>
                 <AccordionButton>
                   <Box flex="1" textAlign="left">
@@ -60,7 +63,7 @@ class ErrorBoundary extends React.Component<Props, State> {
               </AccordionPanel>
             </AccordionItem>
           </Accordion>
-        </Container>
+        </Layout>
       );
     }
 

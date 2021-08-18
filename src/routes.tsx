@@ -33,7 +33,7 @@ const Routes = () => {
         } else {
           const newPlayer: Tracker.Player = {
             name: 'New Player',
-            description: ''
+            description: 'Tracker of Points'
           };
           setPlayer(newPlayer);
           localStorage.setItem(PLAYER_KEY, JSON.stringify(newPlayer));

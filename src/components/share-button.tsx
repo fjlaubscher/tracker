@@ -14,7 +14,7 @@ const ShareButton = ({ id, name }: Props) => {
   const navigatorKeys = Object.keys(navigator);
   const canShare = navigatorKeys.includes('share');
   const canCopyToClipboard = navigatorKeys.includes('clipboard');
-  const gameLink = `192.168.70.75:3000/game/${id}`;
+  const gameLink = `https://tracker.francois.codes/game/${id}`;
 
   return (
     <IconButton

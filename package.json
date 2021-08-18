@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "scripts": {
     "start": "snowpack dev --clean --verbose",
-    "build": "snowpack build --clean --verbose && workbox generateSW workbox.config.js",
+    "build": "snowpack build --clean --verbose",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
     "lint": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\""
   },

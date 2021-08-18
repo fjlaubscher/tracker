@@ -73,7 +73,7 @@ const Home = () => {
               <AlertDescription fontSize="sm" display="block">
                 Tracker uses WebRTC to connect directly to other players.
                 <br />
-                Even though it's just a bunch of points, your data belongs to you.
+                Even though you&apos;re just keeping score, your data belongs to you.
               </AlertDescription>
             </Box>
           </Alert>
