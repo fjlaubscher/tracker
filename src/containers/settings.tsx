@@ -69,13 +69,8 @@ const Settings = () => {
       <FormProvider {...form}>
         <PlayerForm
           onSubmit={(values) => {
-            const updatedPlayer: Tracker.Player = {
-              peerId: player ? player.peerId : '',
-              name: values.name,
-              description: values.description
-            };
-            setPlayer(updatedPlayer);
-            localStorage.setItem(PLAYER_KEY, JSON.stringify(updatedPlayer));
+            setPlayer(values);
+            localStorage.setItem(PLAYER_KEY, JSON.stringify(values));
 
             toast({
               title: 'Success',

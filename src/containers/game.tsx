@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Redirect, useHistory, useParams } from 'react-router-dom';
-import { Box, Button, Progress, UnorderedList, ListItem, Text, useToast } from '@chakra-ui/react';
+import React from 'react';
+import { Redirect, useParams } from 'react-router-dom';
+import { Progress, IconButton, Text, useDisclosure } from '@chakra-ui/react';
 import { useRecoilValue, useRecoilState } from 'recoil';
-import type { DataConnection } from 'peerjs';
+import { MdAdd } from 'react-icons/md';
 
 // components
+import GameGrid from '../components/game/grid';
 import Layout from '../components/layout';
+import ScoreDrawerForm from '../components/score/drawer-form';
 import ShareButton from '../components/share-button';
 
 // state
@@ -13,19 +15,14 @@ import GameAtom from '../state/game';
 import PlayerAtom from '../state/player';
 
 // webrtc
-import Peer from '../webrtc';
+import useGame from '../webrtc/use-game';
 
 const Game = () => {
-  const history = useHistory();
-  const toast = useToast();
   const { id } = useParams<IdParams>();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [game, setGame] = useRecoilState(GameAtom);
   const player = useRecoilValue(PlayerAtom);
-
-  const [hostConnection, setHostConnection] = useState<DataConnection | undefined>(undefined);
-  const [clientConnections, setClientConnections] = useState<DataConnection[]>([]);
-  const [connected, setConnected] = useState(false);
 
   if (!player) {
     return <Redirect to="/" />;
@@ -35,137 +32,29 @@ const Game = () => {
     return <Redirect to="/not-found" />;
   }
 
-  const isHost = player.peerId === id;
-
-  useEffect(() => {
-    if (isHost) {
-      if (!connected) {
-        // this is the "host" peer, listen for connections
-        Peer.on('connection', (connection) => {
-          const hasConnection =
-            clientConnections.filter((c) => c.peer === connection.peer).length > 0;
-
-          if (!hasConnection) {
-            connection.on('data', (data) => {
-              const message = JSON.parse(data) as Tracker.Message;
-
-              if (message.type === 'TRACKER_JOIN' && game) {
-                const newPlayer = JSON.parse(message.data) as Tracker.Player;
-                const updatedGame: Tracker.Game = {
-                  ...game,
-                  players: [...game.players, newPlayer],
-                  scores: {
-                    ...game.scores,
-                    [newPlayer.peerId]: []
-                  }
-                };
-                setGame(updatedGame);
-
-                // send to everyone but this connection
-                const updateMessage: Tracker.Message = {
-                  type: 'TRACKER_UPDATE',
-                  data: JSON.stringify(game)
-                };
-                [...clientConnections, connection].forEach((c) =>
-                  c.send(JSON.stringify(updateMessage))
-                );
-              } else if (message.type === 'TRACKER_UPDATE') {
-                const updatedGame = JSON.parse(message.data) as Tracker.Game;
-                setGame(updatedGame);
-
-                // send to everyone but this connection
-                const updateMessage: Tracker.Message = {
-                  type: 'TRACKER_UPDATE',
-                  data: JSON.stringify(game)
-                };
-                clientConnections
-                  .filter((c) => c.peer !== connection.peer)
-                  .forEach((c) => c.send(JSON.stringify(updateMessage)));
-              }
-            });
-
-            // keep track of all client connections to send updates to later
-            setClientConnections([...clientConnections, connection]);
-            setConnected(true);
-          }
-        });
-      }
-    } else {
-      if (hostConnection) {
-        if (!connected) {
-          // open the host connection
-          hostConnection.on('open', () => {
-            const message: Tracker.Message = {
-              type: 'TRACKER_JOIN',
-              data: JSON.stringify(player)
-            };
-            hostConnection.send(JSON.stringify(message));
-          });
-
-          // this is a "client" peer, only listen to update messages
-          hostConnection.on('data', (data) => {
-            const message = JSON.parse(data) as Tracker.Message;
-            if (message.type === 'TRACKER_UPDATE') {
-              const updatedGame = JSON.parse(message.data) as Tracker.Game;
-              setGame(updatedGame);
-            }
-          });
-          setConnected(true);
-        }
-      } else {
-        // connect to host and request update
-        setHostConnection(Peer.connect(id));
-      }
-    }
-  }, [
-    game,
-    setGame,
-    Peer,
-    hostConnection,
-    setHostConnection,
-    connected,
-    setConnected,
-    clientConnections,
-    setClientConnections
-  ]);
+  const { peer, connection } = useGame(id);
 
   return (
-    <Layout title="Game" actionComponent={<ShareButton id={id} name={game ? game.name : ''} />}>
-      {!connected && <Progress isIndeterminate />}
-      {!connected && game && clientConnections.length === 0 && (
-        <Text fontSize="sm">Waiting for other players to join.</Text>
-      )}
-      {connected && game && (
+    <Layout
+      title={game ? game.name : 'Tracker'}
+      actionComponent={<ShareButton id={id} name={game ? game.name : ''} />}
+    >
+      {!connection && <Progress isIndeterminate />}
+      {!connection && game && <Text fontSize="sm">Waiting for other players to join.</Text>}
+      {connection && game && (
         <>
-          {game.players.map((p) => {
-            const peerId = p.peerId;
-            if (peerId) {
-              const scores = game.scores[peerId];
-              return (
-                <Box key={`player-${peerId}`}>
-                  <Text fontSize="sm">{p.name}</Text>
-                  {p.description && <Text fontSize="xs">{p.description}</Text>}
-                  <UnorderedList>
-                    {scores &&
-                      scores.map((s, i) => <ListItem key={`score-${i}`}>{s.points}</ListItem>)}
-                  </UnorderedList>
-                </Box>
-              );
-            }
-
-            return undefined;
-          })}
-          <Button
-            onClick={() => {
-              const newScore: Tracker.Score = {
-                points: 1,
-                description: 'button press'
-              };
+          <ScoreDrawerForm
+            isOpen={isOpen}
+            onClose={onClose}
+            onSubmit={(values) => {
               const updatedGame: Tracker.Game = {
                 ...game,
                 scores: {
                   ...game.scores,
-                  [player.peerId]: [...game.scores[player.peerId], newScore]
+                  [peer]: [
+                    ...game.scores[peer],
+                    { points: parseInt(values.points.toString()), description: values.description }
+                  ]
                 }
               };
               const message: Tracker.Message = {
@@ -173,18 +62,26 @@ const Game = () => {
                 data: JSON.stringify(updatedGame)
               };
 
-              if (isHost) {
-                // send to everyone but this connection
-                clientConnections.forEach((c) => c.send(JSON.stringify(message)));
-              } else if (!isHost && hostConnection) {
-                hostConnection.send(JSON.stringify(message));
+              if (connection) {
+                connection.send(JSON.stringify(message));
               }
 
               setGame(updatedGame);
+              onClose();
             }}
-          >
-            Update Score
-          </Button>
+          />
+          <GameGrid game={game} />
+          <IconButton
+            colorScheme="blue"
+            size="lg"
+            position="fixed"
+            bottom={4}
+            right={4}
+            zIndex={isOpen ? -1 : 1}
+            icon={<MdAdd size="2rem" />}
+            aria-label="track"
+            onClick={onOpen}
+          />
         </>
       )}
     </Layout>

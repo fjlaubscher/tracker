@@ -39,7 +39,9 @@ const Layout = ({ children, title, actionComponent }: Props) => {
       </Container>
       <Box mt="0 !important" width="100%" background={background} flex={1}>
         <Container width="100%" p={4} maxW="container.xl">
-          <VStack width="100%">{children}</VStack>
+          <VStack position="relative" width="100%">
+            {children}
+          </VStack>
         </Container>
       </Box>
     </VStack>

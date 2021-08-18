@@ -8,7 +8,6 @@ import {
   VStack,
   useMediaQuery,
   Alert,
-  AlertIcon,
   Box,
   AlertTitle,
   AlertDescription
@@ -85,10 +84,8 @@ const Home = () => {
                   id: Peer.id,
                   createdDate: new Date().toISOString(),
                   name,
-                  players: [player],
-                  scores: {
-                    [player.peerId]: []
-                  }
+                  players: { [Peer.id]: player },
+                  scores: { [Peer.id]: [] }
                 };
                 setGame(newGame);
                 const gameExists = games

@@ -25,19 +25,13 @@ const Routes = () => {
 
   useEffect(() => {
     if (!player) {
-      Peer.on('open', (id) => {
+      Peer.on('open', () => {
         const storedPlayer = localStorage.getItem(PLAYER_KEY);
         if (storedPlayer) {
-          const player = JSON.parse(storedPlayer);
-          const updatedPlayer: Tracker.Player = {
-            ...player,
-            peerId: id
-          };
-          setPlayer(updatedPlayer);
-          localStorage.setItem(PLAYER_KEY, JSON.stringify(updatedPlayer));
+          const player = JSON.parse(storedPlayer) as Tracker.Player;
+          setPlayer(player);
         } else {
           const newPlayer: Tracker.Player = {
-            peerId: id,
             name: 'New Player',
             description: ''
           };

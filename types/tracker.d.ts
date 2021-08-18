@@ -5,7 +5,6 @@ declare namespace Tracker {
   }
 
   interface Player {
-    peerId: string;
     name: string;
     description: string;
   }
@@ -19,7 +18,9 @@ declare namespace Tracker {
     id: string;
     createdDate: string;
     name: string;
-    players: Tracker.Player[];
+    players: {
+      [peerId: string]: Tracker.Player;
+    };
     scores: {
       [peerId: string]: Tracker.Score[];
     }
