@@ -1,5 +1,5 @@
 {
-  "name": "pile-of-shame-club",
+  "name": "tracker",
   "version": "0.1.0",
   "scripts": {
     "start": "snowpack dev --clean --verbose",
